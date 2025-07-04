@@ -60,9 +60,9 @@ def convert_model_to_tflite(keras_model_path, tflite_model_path):
         with open(tflite_model_path, 'wb') as f:
             f.write(tflite_model)
         
-        print(f"✅ TFLite model saved to: {tflite_model_path}")
+        print(f"TFLite model saved to: {tflite_model_path}")
         return True
         
     except Exception as e:
-        print(f"❌ TFLite conversion failed: {e}")
+        print(f"ERROR: TFLite conversion failed: {e}")
         return False

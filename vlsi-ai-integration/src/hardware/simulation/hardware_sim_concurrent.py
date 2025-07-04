@@ -1,3 +1,8 @@
+"""
+Concurrent Hardware Simulation
+Multi-threaded hardware simulation demonstrating race conditions and thread safety
+"""
+
 import numpy as np
 import time
 import threading
@@ -11,18 +16,17 @@ operation_lock = Lock()
 results_queue = queue.Queue()
 
 def simulate_mac_operation_threaded(a, b, c, thread_id):
-    """Thread-safe MAC operation with potential race condition"""
+    """Thread-safe MAC operation demonstrating race condition prevention"""
     global operation_counter
     
     # Simulate computation time
     time.sleep(0.000001)
     result = a * b + c
     
-    # RACE CONDITION EXAMPLE - comment/uncomment to see difference
-    # Without lock (race condition):
+    # RACE CONDITION EXAMPLE - uncomment next line to see race condition:
     # operation_counter += 1
     
-    # With lock (thread-safe):
+    # Thread-safe version:
     with operation_lock:
         operation_counter += 1
         print(f"Thread {thread_id}: MAC op #{operation_counter}")
@@ -76,7 +80,7 @@ def process_sample_threaded(sample_data, sample_id):
     return result
 
 def run_concurrent_hardware_simulation(input_data, max_workers=4):
-    """Hardware simulation with multi-threading"""
+    """Multi-threaded hardware simulation with configurable worker count"""
     global operation_counter
     operation_counter = 0
     

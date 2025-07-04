@@ -1,3 +1,8 @@
+"""
+VLSI-AI Integration Pipeline Controller
+Orchestrates model training, conversion, hardware simulation, and performance analysis
+"""
+
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -21,7 +26,7 @@ class PipelineController:
         self.analyzer = PerformanceAnalyzer()
 
     def run_pipeline(self):
-        """Run the complete AI-VLSI integration pipeline"""
+        """Execute the complete AI-VLSI integration pipeline"""
         try:
             self.train_model()
             self.convert_model()
@@ -32,7 +37,7 @@ class PipelineController:
             print(f"Pipeline failed: {e}")
 
     def train_model(self):
-        """Train CNN model and save test data"""
+        """Train CNN model and prepare test data"""
         print("Training CNN model...")
         self.model, (x_test, y_test) = train_model('data/models/pipeline_cnn.h5')
         
@@ -42,14 +47,14 @@ class PipelineController:
         print(f"Model trained and saved. Test data shape: {self.test_data.shape}")
 
     def convert_model(self):
-        """Convert model to TensorFlow Lite"""
+        """Convert trained model to TensorFlow Lite format"""
         print("Converting model to TensorFlow Lite...")
         self.tflite_model_path = 'data/models/pipeline_cnn.tflite'
         convert_to_tflite('data/models/pipeline_cnn.h5', self.tflite_model_path)
         print(f"Model converted to TFLite: {self.tflite_model_path}")
 
     def simulate_hardware(self):
-        """Run hardware simulation"""
+        """Execute hardware simulation on test data"""
         print("Running hardware simulation...")
         if self.test_data is not None:
             self.simulation_results = run_hardware_simulation(self.test_data)
@@ -58,7 +63,7 @@ class PipelineController:
             print("No test data available for simulation")
 
     def analyze_results(self):
-        """Analyze performance and power consumption"""
+        """Analyze performance metrics and power consumption"""
         print("Analyzing performance and power...")
         
         if self.simulation_results is not None:

@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+C++ Hardware Simulation Benchmarking
+Compares CPU, TensorFlow Lite, Python hardware simulation, and C++ hardware simulation
+"""
+
 import sys
 import os
 import time
@@ -12,14 +17,14 @@ from ai_models.tflite_converter import run_tflite_inference
 from hardware.simulation.hardware_sim import run_hardware_simulation
 
 def main():
-    print("🎯 VLSI-AI INTEGRATION WITH C++ ACCELERATION")
+    print("VLSI-AI INTEGRATION WITH C++ ACCELERATION")
     print("=" * 60)
     
     # Load test data
     print("Loading test data...")
     test_data_path = 'data/mnist/x_test.npy'
     if not os.path.exists(test_data_path):
-        print("❌ Test data not found! Run: python scripts/train_model.py")
+        print("ERROR: Test data not found! Run: python scripts/train_model.py")
         return
     
     input_data = np.load(test_data_path)
@@ -40,8 +45,8 @@ def main():
         cpp_time = cpp_results['execution_time']
         cpp_available = True
     except Exception as e:
-        print(f"❌ C++ simulation failed: {e}")
-        print("💡 To fix:")
+        print(f"ERROR: C++ simulation failed: {e}")
+        print("To fix:")
         print("   cd src/hardware/cpp")
         print("   chmod +x compile.sh")
         print("   ./compile.sh")
@@ -57,8 +62,8 @@ def main():
         cpu_time = time.time() - start_time
         cpu_available = True
     except Exception as e:
-        print(f"❌ CPU inference failed: {e}")
-        print("💡 Run: python scripts/train_model.py")
+        print(f"ERROR: CPU inference failed: {e}")
+        print("Run: python scripts/train_model.py")
         cpu_available = False
         cpu_time = float('inf')
     
@@ -70,12 +75,12 @@ def main():
         tflite_time = time.time() - start_time
         tflite_available = True
     except Exception as e:
-        print(f"❌ TFLite inference failed: {e}")
+        print(f"ERROR: TFLite inference failed: {e}")
         tflite_available = False
         tflite_time = float('inf')
     
     # Results
-    print(f"\n📊 COMPREHENSIVE PERFORMANCE COMPARISON:")
+    print(f"\nCOMPREHENSIVE PERFORMANCE COMPARISON:")
     print(f"=" * 50)
     print(f"Python Hardware:     {python_time:.6f}s ({python_time*1000:.2f}ms)")
     
@@ -95,27 +100,27 @@ def main():
         print(f"TFLite Inference:    Not available")
     
     if cpp_available:
-        print(f"\n⚡ SPEEDUP ANALYSIS:")
+        print(f"\nSPEEDUP ANALYSIS:")
         print(f"C++ vs Python:       {python_time/cpp_time:.2f}x faster")
         if cpu_available:
             print(f"C++ vs CPU:          {cpu_time/cpp_time:.2f}x faster") 
         if tflite_available:
             print(f"C++ vs TFLite:       {tflite_time/cpp_time:.2f}x faster")
         
-        print(f"\n🔢 OPERATION COMPARISON:")
+        print(f"\nOPERATION COMPARISON:")
         print(f"Python MAC ops:      {python_results['mac_operations']:,}")
         print(f"C++ MAC ops:         {cpp_results['mac_operations']:,}")
         print(f"Operations match:    {python_results['mac_operations'] == cpp_results['mac_operations']}")
         
-        print(f"\n🔋 POWER COMPARISON:")
+        print(f"\nPOWER COMPARISON:")
         print(f"Python power:        {python_results['estimated_power']*1000:.3f} mW")
         print(f"C++ power:           {cpp_results['power_consumption']*1000:.3f} mW")
         
-        print(f"\n🚀 THROUGHPUT:")
+        print(f"\nTHROUGHPUT:")
         print(f"Python throughput:   {python_results['throughput']:.1f} samples/sec")
         print(f"C++ throughput:      {cpp_results['throughput']:.1f} samples/sec")
     
-    print(f"\n💡 SETUP INSTRUCTIONS:")
+    print(f"\nSETUP INSTRUCTIONS:")
     if not cpp_available:
         print("To enable C++:")
         print("  brew install gcc")
