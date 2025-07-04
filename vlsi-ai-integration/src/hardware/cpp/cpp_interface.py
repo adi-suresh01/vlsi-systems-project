@@ -1,3 +1,8 @@
+"""
+C++ Hardware Simulator Interface
+Python bindings for high-performance C++ hardware simulation
+"""
+
 import ctypes
 import numpy as np
 import os
@@ -76,6 +81,6 @@ class CPPHardwareSimulator:
         }
 
 def run_cpp_hardware_simulation(input_data):
-    """Convenient function for benchmarking"""
+    """High-performance C++ hardware simulation interface"""
     simulator = CPPHardwareSimulator()
     return simulator.run_simulation(input_data)

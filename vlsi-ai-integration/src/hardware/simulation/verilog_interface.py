@@ -1,3 +1,8 @@
+"""
+Verilog Hardware Interface
+Provides compilation and simulation interface for Verilog hardware modules
+"""
+
 from typing import List
 import subprocess
 import os
@@ -8,7 +13,7 @@ class VerilogInterface:
         self.compiled = False
 
     def compile(self) -> bool:
-        """Compile the Verilog file using a simulator."""
+        """Compile Verilog file using available simulator"""
         try:
             # Try different simulators
             simulators = ['iverilog', 'vlog', 'xvlog']
@@ -34,7 +39,7 @@ class VerilogInterface:
             return False
 
     def simulate(self) -> bool:
-        """Run the simulation of the compiled Verilog file."""
+        """Execute simulation of the compiled Verilog design"""
         if not self.compiled:
             print("File not compiled, attempting to compile first...")
             if not self.compile():
@@ -68,7 +73,7 @@ class VerilogInterface:
             return False
 
     def get_results(self) -> List[str]:
-        """Retrieve simulation results."""
+        """Retrieve simulation output from result files"""
         try:
             # Look for common result files
             result_files = ['output.txt', 'results.txt', 'simulation.log']
@@ -85,7 +90,7 @@ class VerilogInterface:
             return ["Error reading results"]
 
     def clean(self) -> None:
-        """Clean up simulation files."""
+        """Clean up generated simulation files"""
         try:
             cleanup_files = ['*.vcd', '*.wlf', 'transcript', 'work', '*.out']
             for pattern in cleanup_files:

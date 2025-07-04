@@ -1,3 +1,8 @@
+"""
+TensorFlow Lite Hardware Bridge
+Interfaces between TensorFlow Lite models and hardware simulation
+"""
+
 from typing import Any, Dict
 import tensorflow as tf
 import numpy as np
@@ -6,7 +11,7 @@ import os
 import subprocess
 
 def convert_to_tflite(model_path, tflite_path):
-    """Convert Keras model to TensorFlow Lite."""
+    """Convert Keras model to TensorFlow Lite format"""
     model = tf.keras.models.load_model(model_path)
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
@@ -18,7 +23,7 @@ def convert_to_tflite(model_path, tflite_path):
     return tflite_model
 
 def run_tflite_inference(tflite_model_path, input_data):
-    """Run inference using TensorFlow Lite model."""
+    """Execute inference using TensorFlow Lite model"""
     interpreter = tf.lite.Interpreter(model_path=tflite_model_path)
     interpreter.allocate_tensors()
     
@@ -41,13 +46,13 @@ class TFLiteHWBridge:
         self.interpreter = self.load_tflite_model()
 
     def load_tflite_model(self) -> tf.lite.Interpreter:
-        """Load TensorFlow Lite model"""
+        """Load and initialize TensorFlow Lite model"""
         interpreter = tf.lite.Interpreter(model_path=self.tflite_model_path)
         interpreter.allocate_tensors()
         return interpreter
 
     def get_input_output_details(self) -> dict:
-        """Get model input/output details"""
+        """Get model input and output tensor details"""
         input_details = self.interpreter.get_input_details()
         output_details = self.interpreter.get_output_details()
         return {
@@ -56,7 +61,7 @@ class TFLiteHWBridge:
         }
 
     def run_inference(self, input_data: np.ndarray) -> np.ndarray:
-        """Run TensorFlow Lite inference"""
+        """Execute TensorFlow Lite inference on input data"""
         input_details = self.interpreter.get_input_details()
         output_details = self.interpreter.get_output_details()
 
@@ -70,7 +75,7 @@ class TFLiteHWBridge:
         return output_data
 
     def simulate_hardware_inference(self, input_data: np.ndarray) -> dict:
-        """Bridge to hardware simulation"""
+        """Bridge TensorFlow Lite model to hardware simulation"""
         from hardware.simulation.hardware_sim import run_hardware_simulation
         
         # Run hardware simulation
@@ -78,7 +83,7 @@ class TFLiteHWBridge:
         return hw_results
 
     def benchmark_inference(self, input_data: np.ndarray) -> dict:
-        """Compare CPU vs Hardware inference"""
+        """Compare CPU inference vs Hardware simulation performance"""
         # CPU inference
         cpu_start = time.time()
         cpu_output = self.run_inference(input_data)
@@ -108,7 +113,7 @@ class TFLiteHWBridge:
         return benchmark_results
     
     def _compare_outputs(self, cpu_output, hw_output):
-        """Compare CPU and hardware outputs"""
+        """Compare CPU and hardware simulation outputs"""
         try:
             # Simple correlation check
             if len(cpu_output.flatten()) == len(hw_output.flatten()):
@@ -120,7 +125,7 @@ class TFLiteHWBridge:
             return {'correlation': f'Error: {e}'}
 
 def bridge_tflite_to_hardware(tflite_model_path, input_data):
-    """Simple bridge function for compatibility"""
+    """Simple bridge function for TensorFlow Lite to hardware simulation"""
     bridge = TFLiteHWBridge(tflite_model_path)
     return bridge.benchmark_inference(input_data)
 

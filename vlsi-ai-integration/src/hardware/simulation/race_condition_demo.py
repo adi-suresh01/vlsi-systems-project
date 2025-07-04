@@ -1,3 +1,8 @@
+"""
+Race Condition Demonstration
+Shows the importance of thread synchronization in concurrent hardware simulation
+"""
+
 import threading
 import time
 import random
@@ -7,7 +12,7 @@ shared_power_consumption = 0
 power_lock = threading.Lock()
 
 def unsafe_power_update(thread_id, iterations=1000):
-    """Demonstrates race condition - multiple threads updating shared variable"""
+    """Demonstrates race condition with unsynchronized shared variable access"""
     global shared_power_consumption
     
     for i in range(iterations):
@@ -21,11 +26,11 @@ def unsafe_power_update(thread_id, iterations=1000):
             print(f"Thread {thread_id}: Power = {shared_power_consumption:.3f}W")
 
 def safe_power_update(thread_id, iterations=1000):
-    """Thread-safe version using locks"""
+    """Thread-safe version using mutex locks"""
     global shared_power_consumption
     
     for i in range(iterations):
-        with power_lock:  # LOCK: Only one thread can access at a time
+        with power_lock:  # CRITICAL SECTION: Only one thread can access at a time
             current_power = shared_power_consumption
             time.sleep(0.000001)
             new_power = current_power + 0.001
@@ -36,7 +41,7 @@ def safe_power_update(thread_id, iterations=1000):
                 print(f"Thread {thread_id}: Safe Power = {shared_power_consumption:.3f}W")
 
 def demonstrate_race_condition():
-    """Show the difference between safe and unsafe threading"""
+    """Demonstrates the difference between unsafe and thread-safe operations"""
     global shared_power_consumption
     
     print("=== RACE CONDITION DEMONSTRATION ===")

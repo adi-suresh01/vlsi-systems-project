@@ -15,7 +15,7 @@ def main():
     # Check if test data exists
     input_data_path = 'data/mnist/x_test.npy'
     if not os.path.exists(input_data_path):
-        print("❌ Test data not found. Please run 'python scripts/train_model.py' first")
+        print("ERROR: Test data not found. Please run 'python scripts/train_model.py' first")
         sys.exit(1)
     
     # Load test data
@@ -34,18 +34,18 @@ def main():
     print("DETAILED HARDWARE SIMULATION RESULTS")
     print("="*60)
     
-    print(f"\n📊 EXECUTION METRICS:")
+    print(f"\nEXECUTION METRICS:")
     print(f"   Software Simulation Time:    {simulation_results['execution_time']:.4f} seconds")
     print(f"   Theoretical Hardware Time:   {simulation_results.get('theoretical_hw_time', 'N/A'):.6f} seconds")
     print(f"   Simulated Clock Cycles:      {simulation_results['simulated_cycles']:,}")
     print(f"   Clock Frequency:             {simulation_results.get('clock_frequency_mhz', 'N/A'):.1f} MHz")
     
-    print(f"\n⚡ OPERATION BREAKDOWN:")
+    print(f"\nOPERATION BREAKDOWN:")
     print(f"   Total Operations:            {simulation_results['operations_count']:,}")
     print(f"   MAC Operations:              {simulation_results.get('mac_operations', 'N/A'):,}")
     print(f"   ReLU Operations:             {simulation_results.get('relu_operations', 'N/A'):,}")
     
-    print(f"\n🔋 POWER ANALYSIS:")
+    print(f"\nPOWER ANALYSIS:")
     total_power = simulation_results['estimated_power']
     print(f"   Total Estimated Power:       {total_power:.6f} Watts ({total_power*1000:.3f} mW)")
     
@@ -56,7 +56,7 @@ def main():
         print(f"   MAC Power:                   {breakdown['mac_power_W']*1000000:.3f} µW")
         print(f"   ReLU Power:                  {breakdown['relu_power_W']*1000000:.3f} µW")
     
-    print(f"\n🚀 PERFORMANCE METRICS:")
+    print(f"\nPERFORMANCE METRICS:")
     print(f"   Throughput:                  {simulation_results['throughput']:.2f} samples/sec")
     print(f"   Results Shape:               {simulation_results['results'].shape}")
     
@@ -67,15 +67,15 @@ def main():
     
     print("="*60)
     
-    print(f"\n💡 INTERPRETATION:")
+    print(f"\nINTERPRETATION:")
     if total_power < 0.001:
-        print("   ✅ Very low power consumption - suitable for mobile/edge devices")
+        print("   Very low power consumption - suitable for mobile/edge devices")
     elif total_power < 0.01:
-        print("   ✅ Low power consumption - good for battery-powered devices")
+        print("   Low power consumption - good for battery-powered devices")
     elif total_power < 0.1:
-        print("   ⚠️  Moderate power consumption")
+        print("   WARNING: Moderate power consumption")
     else:
-        print("   ❗ High power consumption - may need optimization")
+        print("   WARNING: High power consumption - may need optimization")
 
 if __name__ == "__main__":
     main()

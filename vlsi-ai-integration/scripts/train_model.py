@@ -32,28 +32,28 @@ def main():
         os.makedirs('data/models', exist_ok=True)
         os.makedirs('data/mnist', exist_ok=True)
         
-        print("✅ Directories created successfully")
+        print("Directories created successfully")
         
     except Exception as e:
-        print(f"❌ Error creating directories: {e}")
+        print(f"ERROR: Error creating directories: {e}")
         sys.exit(1)
     
     # Train the CNN model on the MNIST dataset
     print("Training CNN model on MNIST dataset...")
     try:
         model = train_cnn_model()
-        print("✅ Model training completed")
+        print("Model training completed")
     except Exception as e:
-        print(f"❌ Error training model: {e}")
+        print(f"ERROR: Error training model: {e}")
         sys.exit(1)
     
     # Save the trained model
     model_save_path = 'data/models/mnist_cnn.h5'
     try:
         model.save(model_save_path)
-        print(f"✅ Model saved to: {model_save_path}")
+        print(f"Model saved to: {model_save_path}")
     except Exception as e:
-        print(f"❌ Error saving model: {e}")
+        print(f"ERROR: Error saving model: {e}")
         sys.exit(1)
     
     # Convert the trained model to TensorFlow Lite format
@@ -61,9 +61,9 @@ def main():
     tflite_save_path = 'data/models/mnist_cnn.tflite'
     try:
         convert_model_to_tflite(model, tflite_save_path)
-        print(f"✅ TFLite model saved to: {tflite_save_path}")
+        print(f"TFLite model saved to: {tflite_save_path}")
     except Exception as e:
-        print(f"❌ Error converting to TFLite: {e}")
+        print(f"ERROR: Error converting to TFLite: {e}")
         sys.exit(1)
     
     # Save some test data for benchmarking
@@ -78,18 +78,18 @@ def main():
         
         np.save('data/mnist/x_test.npy', test_data)
         np.save('data/mnist/y_test.npy', test_labels)
-        print("✅ Test data saved for benchmarking")
+        print("Test data saved for benchmarking")
     except Exception as e:
-        print(f"❌ Error saving test data: {e}")
+        print(f"ERROR: Error saving test data: {e}")
         sys.exit(1)
     
-    print("\n🎉 Training completed successfully!")
-    print("📁 Files created:")
+    print("\nTraining completed successfully!")
+    print("Files created:")
     print(f"   - {model_save_path}")
     print(f"   - {tflite_save_path}")
     print(f"   - data/mnist/x_test.npy")
     print(f"   - data/mnist/y_test.npy")
-    print("\n📋 Next steps:")
+    print("\nNext steps:")
     print("   1. Run hardware simulation: python scripts/run_simulation.py")
     print("   2. Run full benchmark: python scripts/benchmark.py")
 
