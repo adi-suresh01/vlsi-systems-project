@@ -138,15 +138,15 @@ impl Agent {
     }
 
     pub fn pause(&mut self) -> Result<(), TransitionError> {
-        self.state.transition(AgentState::Paused)
+        self.state.transition(AgentState::Paused).map(|_| ())
     }
 
     pub fn resume(&mut self) -> Result<(), TransitionError> {
-        self.state.transition(AgentState::Running)
+        self.state.transition(AgentState::Running).map(|_| ())
     }
 
     pub fn terminate(&mut self) -> Result<(), TransitionError> {
-        self.state.transition(AgentState::Terminated)
+        self.state.transition(AgentState::Terminated).map(|_| ())
     }
 
     pub fn state(&self) -> AgentState {
