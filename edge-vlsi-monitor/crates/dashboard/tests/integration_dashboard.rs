@@ -48,7 +48,7 @@ fn test_sim_result_payload_serialization() {
 
     // Verify it serializes to valid JSON
     let json = serde_json::to_string_pretty(&payload).unwrap();
-    assert!(json.contains("\"sample_count\":5"));
+    assert!(json.contains("\"sample_count\": 5"));
     assert!(json.contains("\"mac_ops\""));
     assert!(json.contains("\"junction_temp_c\""));
 
