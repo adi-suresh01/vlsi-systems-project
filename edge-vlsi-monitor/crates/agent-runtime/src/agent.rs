@@ -18,7 +18,7 @@ use crate::inference::{InferenceResult, OnnxModel};
 use crate::state::{AgentState, StateMachine, TransitionError};
 use metrics_collector::{AgentMetrics, PowerSample};
 use vlsi_sim::{
-    ConvConfig, ConvEngine, DvfsConfig, PipelineConfig, PowerBreakdown, PowerModel,
+    ConvConfig, ConvEngine, PipelineConfig, PowerModel,
     SimulationResult, ThermalModel,
 };
 
