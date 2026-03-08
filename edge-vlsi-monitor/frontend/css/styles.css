@@ -1,0 +1,361 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    min-height: 100vh;
+    color: #e0e0e0;
+}
+
+header {
+    background: rgba(15, 12, 41, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(100, 100, 255, 0.2);
+}
+
+header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+    background: linear-gradient(45deg, #00d2ff, #7b2ff7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+header p {
+    color: #8888aa;
+    font-size: 1rem;
+}
+
+.container {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Status Bar */
+.status-bar {
+    background: rgba(30, 30, 50, 0.9);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(100, 100, 255, 0.15);
+}
+
+.status-indicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-dot.connected {
+    background: #00ff88;
+    box-shadow: 0 0 8px #00ff88;
+}
+
+.status-dot.disconnected {
+    background: #ff4444;
+    box-shadow: 0 0 8px #ff4444;
+}
+
+#status-text {
+    font-weight: 600;
+    flex-grow: 1;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+}
+
+.controls button {
+    background: linear-gradient(45deg, #7b2ff7, #00d2ff);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.controls button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(123, 47, 247, 0.4);
+}
+
+.controls button:disabled {
+    background: #444;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Grid Layout */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: rgba(25, 25, 45, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(100, 100, 255, 0.1);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(123, 47, 247, 0.3);
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.card h2 {
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+    color: #c0c0ff;
+    border-bottom: 1px solid rgba(100, 100, 255, 0.15);
+    padding-bottom: 10px;
+}
+
+/* Charts */
+.chart-container {
+    position: relative;
+    height: 280px;
+    margin-top: 10px;
+}
+
+/* Metrics */
+.metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(100, 100, 255, 0.08);
+}
+
+.metric:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #8888aa;
+    font-size: 0.9rem;
+}
+
+.metric-value {
+    font-weight: 700;
+    color: #00d2ff;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+}
+
+.power-metrics, .hardware-metrics, .thermal-metrics {
+    background: rgba(15, 15, 30, 0.6);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+/* Thermal Gauge */
+.thermal-gauge {
+    margin-bottom: 16px;
+}
+
+.gauge-bar {
+    height: 24px;
+    background: rgba(15, 15, 30, 0.8);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(100, 100, 255, 0.15);
+}
+
+.gauge-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88, #ffaa00, #ff4444);
+    border-radius: 12px;
+    transition: width 0.5s ease;
+}
+
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Agent List */
+.agent-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.agent-list .placeholder {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.agent-card {
+    background: rgba(15, 15, 30, 0.6);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid #7b2ff7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.agent-card .agent-info {
+    flex-grow: 1;
+}
+
+.agent-card .agent-name {
+    font-weight: 700;
+    color: #c0c0ff;
+}
+
+.agent-card .agent-state {
+    font-size: 0.85rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+.agent-card .agent-state.running {
+    background: rgba(0, 255, 136, 0.15);
+    color: #00ff88;
+}
+
+.agent-card .agent-state.paused {
+    background: rgba(255, 170, 0, 0.15);
+    color: #ffaa00;
+}
+
+.agent-card .agent-state.terminated {
+    background: rgba(255, 68, 68, 0.15);
+    color: #ff4444;
+}
+
+.agent-card .agent-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.agent-card .agent-actions button {
+    background: rgba(100, 100, 255, 0.15);
+    color: #aaa;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.agent-card .agent-actions button:hover {
+    background: rgba(123, 47, 247, 0.3);
+    color: #fff;
+}
+
+/* Log */
+.log-container {
+    background: #0a0a15;
+    color: #00ff88;
+    padding: 15px;
+    border-radius: 8px;
+    height: 200px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.log-container p {
+    margin: 3px 0;
+}
+
+.log-container .log-error {
+    color: #ff4444;
+}
+
+.log-container .log-warn {
+    color: #ffaa00;
+}
+
+.log-container .log-info {
+    color: #00d2ff;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px 0;
+    color: #555;
+    margin-top: 20px;
+    border-top: 1px solid rgba(100, 100, 255, 0.1);
+}
+
+/* Loading */
+.loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #00d2ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+
+    header h1 {
+        font-size: 1.6rem;
+    }
+
+    .status-indicator {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
