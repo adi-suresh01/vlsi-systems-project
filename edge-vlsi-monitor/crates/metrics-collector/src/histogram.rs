@@ -157,7 +157,7 @@ impl HdrHistogram {
     }
 }
 
-fn compute_bucket_count(max_value: u64, precision: u32) -> usize {
+fn compute_bucket_count(_max_value: u64, precision: u32) -> usize {
     let scale = 10_usize.pow(precision);
     // Enough buckets to cover the range with the given precision
     (scale + 1).max(64)
