@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge VLSI AI Monitor</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Edge VLSI AI Monitor</h1>
+        <p>Real-time Edge AI Agent Monitoring &amp; VLSI Power Analysis</p>
+    </header>
+
+    <div class="container">
+        <!-- Connection & Controls -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <span id="ws-status" class="status-dot disconnected"></span>
+                <span id="status-text">Connecting...</span>
+                <div class="controls">
+                    <button id="run-benchmark" onclick="runBenchmark()">Run Benchmark</button>
+                    <button id="spawn-agent" onclick="spawnAgent()">Spawn Agent</button>
+                </div>
+            </div>
+        </div>
+
+        <main>
+            <div class="grid-container">
+                <!-- Agent Manager -->
+                <section class="card">
+                    <h2>Agent Manager</h2>
+                    <div id="agent-list" class="agent-list">
+                        <p class="placeholder">No agents running. Click "Spawn Agent" to start.</p>
+                    </div>
+                </section>
+
+                <!-- Performance Chart -->
+                <section class="card">
+                    <h2>Performance Metrics</h2>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Power Analysis -->
+                <section class="card">
+                    <h2>Power Analysis</h2>
+                    <div class="power-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Total Power:</span>
+                            <span id="total-power" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Energy/Inference:</span>
+                            <span id="energy-per-inference" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Base Power:</span>
+                            <span id="base-power" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Dynamic Power:</span>
+                            <span id="dynamic-power" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Leakage Power:</span>
+                            <span id="leakage-power" class="metric-value">-</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="powerChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Thermal Monitor -->
+                <section class="card">
+                    <h2>Thermal Monitor</h2>
+                    <div class="thermal-gauge">
+                        <div class="gauge-bar">
+                            <div id="temp-fill" class="gauge-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="gauge-labels">
+                            <span>25 C</span>
+                            <span id="current-temp">- C</span>
+                            <span>85 C</span>
+                        </div>
+                    </div>
+                    <div class="thermal-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Junction Temp:</span>
+                            <span id="junction-temp" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Headroom:</span>
+                            <span id="thermal-headroom" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Throttling:</span>
+                            <span id="throttle-status" class="metric-value">-</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hardware Details -->
+                <section class="card">
+                    <h2>Hardware Metrics</h2>
+                    <div class="hardware-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Clock Cycles:</span>
+                            <span id="clock-cycles" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Total Operations:</span>
+                            <span id="total-operations" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">MAC Operations:</span>
+                            <span id="mac-operations" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">ReLU Operations:</span>
+                            <span id="relu-operations" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Throughput:</span>
+                            <span id="throughput" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Clock Frequency:</span>
+                            <span id="clock-freq" class="metric-value">-</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Latency Timeline -->
+                <section class="card">
+                    <h2>Latency Timeline</h2>
+                    <div class="chart-container">
+                        <canvas id="latencyChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Real-time Log -->
+                <section class="card full-width">
+                    <h2>Event Log</h2>
+                    <div id="log-container" class="log-container">
+                        <p>Initializing Edge VLSI Monitor...</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <p>Edge VLSI AI Monitor | Rust-powered | Last updated: <span id="last-updated">Never</span></p>
+    </footer>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
