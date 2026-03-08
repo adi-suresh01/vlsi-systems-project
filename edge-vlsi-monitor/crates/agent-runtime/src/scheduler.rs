@@ -133,10 +133,7 @@ impl Scheduler {
 
                 SchedulerCommand::TerminateAgent { id, respond } => {
                     let result = match self.agents.get_mut(&id) {
-                        Some(agent) => {
-                            agent.terminate().map_err(|e| e.to_string())?;
-                            Ok(())
-                        }
+                        Some(agent) => agent.terminate().map_err(|e| e.to_string()),
                         None => Err("Agent not found".into()),
                     };
                     let _ = respond.send(result).await;
