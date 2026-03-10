@@ -432,6 +432,167 @@ fn cmd_dvfs(samples: usize, json: bool) -> Result<()> {
     Ok(())
 }
 
+fn cmd_attention_sweep(
+    model_name: &str,
+    seq_lengths: &[usize],
+    num_inferences: u64,
+    dvfs_level: Option<usize>,
+    csv: bool,
+    json: bool,
+) -> Result<()> {
+    let config = match model_name {
+        "tinybert" => vlsi_sim::TransformerConfig::tinybert(),
+        "distilgpt2" => vlsi_sim::TransformerConfig::distilgpt2(),
+        "bert-base" => vlsi_sim::TransformerConfig::bert_base(),
+        other => anyhow::bail!("Unknown transformer model: '{}'. Use tinybert, distilgpt2, or bert-base.", other),
+    };
+
+    let mut dvfs = DvfsConfig::default();
+    if let Some(level) = dvfs_level {
+        if let Some(&(v, f)) = dvfs.levels.get(level) {
+            dvfs.voltage = v;
+            dvfs.frequency_mhz = f;
+        } else {
+            anyhow::bail!("Invalid DVFS level {}. Use 0-4.", level);
+        }
+    }
+    let thermal_config = ThermalConfig::default();
+
+    let ops_list = vlsi_sim::sweep_sequence_lengths(&config, seq_lengths);
+
+    if csv {
+        println!("seq_length,total_macs,attention_macs,linear_macs,total_activations,power_mw,theoretical_hw_time_ms,steady_state_temp_c");
+        for ops in &ops_list {
+            let profile = vlsi_sim::transformer_ops_to_profile(ops, num_inferences);
+            let sim = run_simulation_from_profile(&profile, &dvfs, &thermal_config);
+            let thermal = vlsi_sim::ThermalModel::new(thermal_config.clone());
+            let steady_temp = thermal.steady_state_temp(sim.estimated_power_w);
+
+            println!("{},{},{},{},{},{:.4},{:.6},{:.1}",
+                ops.seq_length,
+                ops.total_macs,
+                ops.attention_quadratic_macs,
+                ops.linear_macs,
+                ops.total_activations,
+                sim.estimated_power_w * 1000.0,
+                sim.theoretical_hw_time_secs * 1000.0,
+                steady_temp,
+            );
+        }
+        return Ok(());
+    }
+
+    let mut rows = Vec::new();
+    for ops in &ops_list {
+        let profile = vlsi_sim::transformer_ops_to_profile(ops, num_inferences);
+        let sim = run_simulation_from_profile(&profile, &dvfs, &thermal_config);
+        let thermal = vlsi_sim::ThermalModel::new(thermal_config.clone());
+        let steady_temp = thermal.steady_state_temp(sim.estimated_power_w);
+        rows.push((ops, sim, steady_temp));
+    }
+
+    if json {
+        let json_rows: Vec<_> = rows
+            .iter()
+            .map(|(ops, sim, temp)| {
+                serde_json::json!({
+                    "seq_length": ops.seq_length,
+                    "total_macs": ops.total_macs,
+                    "attention_quadratic_macs": ops.attention_quadratic_macs,
+                    "linear_macs": ops.linear_macs,
+                    "total_activations": ops.total_activations,
+                    "power_mw": sim.estimated_power_w * 1000.0,
+                    "theoretical_hw_time_ms": sim.theoretical_hw_time_secs * 1000.0,
+                    "steady_state_temp_c": temp,
+                })
+            })
+            .collect();
+        println!("{}", serde_json::to_string_pretty(&json_rows)?);
+    } else {
+        println!("\nAttention Sweep: {} (V={:.1}V, f={:.0}MHz, {} inference(s))\n",
+            config.name, dvfs.voltage, dvfs.frequency_mhz, num_inferences);
+
+        let mut table = Table::new();
+        table.load_preset(UTF8_FULL);
+        table.set_header(vec![
+            "Seq Len", "Total MACs", "Attn MACs (n^2)", "Linear MACs",
+            "Power (mW)", "HW Time (ms)", "Steady T (C)",
+        ]);
+        for (ops, sim, temp) in &rows {
+            table.add_row(vec![
+                format!("{}", ops.seq_length),
+                format_mac_count(ops.total_macs),
+                format_mac_count(ops.attention_quadratic_macs),
+                format_mac_count(ops.linear_macs),
+                format!("{:.3}", sim.estimated_power_w * 1000.0),
+                format!("{:.3}", sim.theoretical_hw_time_secs * 1000.0),
+                format!("{:.1}", temp),
+            ]);
+        }
+        println!("{table}");
+    }
+
+    Ok(())
+}
+
+fn cmd_models(json: bool) -> Result<()> {
+    let registry = ModelRegistry::new();
+    let names = registry.list_names();
+
+    if json {
+        let entries: Vec<_> = names
+            .iter()
+            .filter_map(|name| {
+                registry.get(name).map(|e| {
+                    serde_json::json!({
+                        "key": name,
+                        "name": e.name,
+                        "arch_type": format!("{:?}", e.arch_type),
+                        "input_shape": e.input_shape,
+                    })
+                })
+            })
+            .collect();
+        println!("{}", serde_json::to_string_pretty(&entries)?);
+    } else {
+        let mut table = Table::new();
+        table.load_preset(UTF8_FULL);
+        table.set_header(vec!["Key", "Name", "Type", "Input Shape"]);
+        for name in &names {
+            if let Some(entry) = registry.get(name) {
+                let arch = match &entry.arch_type {
+                    agent_runtime::ModelArchType::Cnn => "CNN".to_string(),
+                    agent_runtime::ModelArchType::Transformer(c) => {
+                        format!("Transformer ({}L, d={})", c.num_layers, c.d_model)
+                    }
+                    agent_runtime::ModelArchType::Custom => "Custom".to_string(),
+                };
+                table.add_row(vec![
+                    name.to_string(),
+                    entry.name.clone(),
+                    arch,
+                    format!("{:?}", entry.input_shape),
+                ]);
+            }
+        }
+        println!("{table}");
+    }
+
+    Ok(())
+}
+
+fn format_mac_count(macs: u64) -> String {
+    if macs >= 1_000_000_000 {
+        format!("{:.2}B", macs as f64 / 1e9)
+    } else if macs >= 1_000_000 {
+        format!("{:.1}M", macs as f64 / 1e6)
+    } else if macs >= 1_000 {
+        format!("{:.1}K", macs as f64 / 1e3)
+    } else {
+        format!("{}", macs)
+    }
+}
+
 fn print_simulation_result(result: &vlsi_sim::SimulationResult, samples: usize) {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
