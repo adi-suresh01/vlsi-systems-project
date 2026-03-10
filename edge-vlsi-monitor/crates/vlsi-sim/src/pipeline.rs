@@ -303,6 +303,40 @@ mod tests {
     }
 
     #[test]
+    fn test_simulation_from_profile() {
+        let profile = WorkloadProfile::from_conv(1, 3528, 8);
+        let dvfs = DvfsConfig::default();
+        let thermal_config = ThermalConfig::default();
+        let result = run_simulation_from_profile(&profile, &dvfs, &thermal_config);
+
+        assert_eq!(result.mac_operations, 3528);
+        assert_eq!(result.relu_operations, 8);
+        assert_eq!(result.simulated_cycles, 3536);
+        assert!(result.estimated_power_w > 0.0);
+        assert!(result.thermal_state.junction_temp_c >= 25.0);
+    }
+
+    #[test]
+    fn test_profile_matches_conv_power() {
+        // A profile with the same op counts as the conv pipeline
+        // should produce the same power breakdown
+        let config = PipelineConfig::default();
+        let samples = generate_test_samples(1, 28, 28);
+        let conv_result = run_simulation(&samples, &config);
+
+        let profile = WorkloadProfile::from_conv(1, 3528, 8);
+        let profile_result = run_simulation_from_profile(
+            &profile,
+            &config.dvfs,
+            &config.thermal,
+        );
+
+        assert_eq!(conv_result.mac_operations, profile_result.mac_operations);
+        assert_eq!(conv_result.relu_operations, profile_result.relu_operations);
+        assert!((conv_result.estimated_power_w - profile_result.estimated_power_w).abs() < 1e-12);
+    }
+
+    #[test]
     fn test_thermal_feedback_during_sim() {
         let config = PipelineConfig::default();
         let samples = generate_test_samples(5, 28, 28);
