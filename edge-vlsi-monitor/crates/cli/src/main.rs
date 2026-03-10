@@ -6,8 +6,10 @@ use clap::{Parser, Subcommand};
 use comfy_table::{Table, presets::UTF8_FULL};
 
 use vlsi_sim::{
-    generate_test_samples, run_simulation, run_simulation_parallel, DvfsConfig, PipelineConfig,
+    generate_test_samples, run_simulation, run_simulation_parallel, run_simulation_from_profile,
+    DvfsConfig, PipelineConfig, ThermalConfig,
 };
+use agent_runtime::ModelRegistry;
 
 #[derive(Parser)]
 #[command(name = "edge-vlsi", about = "Edge VLSI AI Monitor - Rust-based hardware simulation & agent monitoring")]
