@@ -151,7 +151,9 @@ async fn main() -> Result<()> {
             threads,
             height,
             width,
-        } => cmd_sim(samples, clock_mhz, threads, height, width, cli.json),
+            model,
+            seq_length,
+        } => cmd_sim(samples, clock_mhz, threads, height, width, model, seq_length, cli.json),
 
         Commands::Bench { samples, compare } => cmd_bench(samples, compare, cli.json),
 
