@@ -167,6 +167,16 @@ async fn main() -> Result<()> {
         Commands::Sysinfo => cmd_sysinfo(cli.json),
 
         Commands::Dvfs { samples } => cmd_dvfs(samples, cli.json),
+
+        Commands::AttentionSweep {
+            model,
+            seq_lengths,
+            inferences,
+            dvfs_level,
+            csv,
+        } => cmd_attention_sweep(&model, &seq_lengths, inferences, dvfs_level, csv, cli.json),
+
+        Commands::Models => cmd_models(cli.json),
     }
 }
 
