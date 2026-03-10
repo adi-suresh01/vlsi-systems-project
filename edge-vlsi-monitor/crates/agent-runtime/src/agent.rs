@@ -137,6 +137,34 @@ impl Agent {
         result
     }
 
+    /// Run hardware simulation from a pre-computed workload profile.
+    pub fn run_hw_simulation_from_profile(&mut self, profile: &WorkloadProfile) -> SimulationResult {
+        let start = Instant::now();
+
+        let result = vlsi_sim::run_simulation_from_profile(
+            profile,
+            &self.power_model.config,
+            &self.thermal.config().clone(),
+        );
+
+        let latency_us = start.elapsed().as_micros() as u64;
+        self.metrics.record_inference(latency_us);
+
+        self.total_mac_ops += result.mac_operations;
+        self.total_relu_ops += result.relu_operations;
+
+        self.metrics.record_power(PowerSample {
+            timestamp: Utc::now(),
+            power_w: result.estimated_power_w,
+            mac_ops: result.mac_operations,
+            relu_ops: result.relu_operations,
+            temperature_c: result.thermal_state.junction_temp_c,
+        });
+
+        self.last_sim_result = Some(result.clone());
+        result
+    }
+
     pub fn pause(&mut self) -> Result<(), TransitionError> {
         self.state.transition(AgentState::Paused).map(|_| ())
     }
