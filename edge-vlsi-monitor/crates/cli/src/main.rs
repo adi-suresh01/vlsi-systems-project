@@ -49,6 +49,15 @@ enum Commands {
         /// Sample image width
         #[arg(long, default_value = "28")]
         width: usize,
+
+        /// Model name from registry (e.g., tinybert, distilgpt2, mobilenetv2).
+        /// When set, uses workload profile instead of synthetic convolution.
+        #[arg(long)]
+        model: Option<String>,
+
+        /// Sequence length for transformer models
+        #[arg(long, default_value = "128")]
+        seq_length: usize,
     },
 
     /// Run full benchmark suite
