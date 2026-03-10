@@ -204,6 +204,61 @@ pub fn generate_test_samples(count: usize, rows: usize, cols: usize) -> Vec<Arra
         .collect()
 }
 
+/// Run hardware simulation from a generic workload profile.
+///
+/// Model-agnostic entry point. Takes pre-computed operation counts and feeds
+/// them through the power and thermal models. Use this for real ONNX model
+/// results, transformer attention sweeps, or any workload described by op counts.
+pub fn run_simulation_from_profile(
+    profile: &WorkloadProfile,
+    dvfs: &DvfsConfig,
+    thermal_config: &ThermalConfig,
+) -> SimulationResult {
+    let start = Instant::now();
+
+    let total_mac = profile.total_mac_ops();
+    let total_activation = profile.total_activation_ops();
+    let total_ops = total_mac + total_activation;
+    let total_cycles = total_mac + total_activation; // 1 cycle per op
+
+    let freq_mhz = dvfs.frequency_mhz;
+    let theoretical_hw_time = total_cycles as f64 / (freq_mhz * 1e6);
+
+    let power_model = PowerModel::new(dvfs.clone());
+    let power_breakdown = power_model.estimate(total_mac, total_activation);
+
+    let mut thermal = ThermalModel::new(thermal_config.clone());
+    if theoretical_hw_time > 0.0 {
+        let steps = 10;
+        let dt = theoretical_hw_time / steps as f64;
+        for _ in 0..steps {
+            thermal.update(power_breakdown.total_power_w, dt);
+        }
+    }
+
+    let execution_time = start.elapsed().as_secs_f64();
+    let throughput = if execution_time > 0.0 {
+        profile.num_inferences as f64 / execution_time
+    } else {
+        0.0
+    };
+
+    SimulationResult {
+        results: vec![],
+        execution_time_secs: execution_time,
+        simulated_cycles: total_cycles,
+        estimated_power_w: power_breakdown.total_power_w,
+        throughput_samples_per_sec: throughput,
+        operations_count: total_ops,
+        mac_operations: total_mac,
+        relu_operations: total_activation,
+        theoretical_hw_time_secs: theoretical_hw_time,
+        clock_frequency_mhz: freq_mhz,
+        power_breakdown,
+        thermal_state: thermal.state().clone(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
