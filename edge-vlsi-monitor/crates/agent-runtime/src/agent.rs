@@ -19,7 +19,7 @@ use crate::state::{AgentState, StateMachine, TransitionError};
 use metrics_collector::{AgentMetrics, PowerSample};
 use vlsi_sim::{
     ConvConfig, ConvEngine, PipelineConfig, PowerModel,
-    SimulationResult, ThermalModel,
+    SimulationResult, ThermalModel, WorkloadProfile,
 };
 
 /// Serializable agent information for the dashboard.
