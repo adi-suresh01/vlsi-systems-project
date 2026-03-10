@@ -10,10 +10,12 @@
 
 pub mod agent;
 pub mod inference;
+pub mod model_registry;
 pub mod scheduler;
 pub mod state;
 
 pub use agent::{Agent, AgentInfo};
 pub use inference::{InferenceResult, OnnxModel};
+pub use model_registry::{ModelArchType, ModelEntry, ModelRegistry};
 pub use scheduler::{Scheduler, SchedulerCommand, SchedulerHandle};
 pub use state::{AgentState, StateMachine, TransitionError};
