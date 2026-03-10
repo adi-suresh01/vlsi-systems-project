@@ -14,6 +14,7 @@ use rayon::prelude::*;
 use crate::conv::{ConvConfig, ConvEngine, ConvResult};
 use crate::power::{DvfsConfig, PowerBreakdown, PowerModel};
 use crate::thermal::{ThermalConfig, ThermalModel, ThermalState};
+use crate::workload::WorkloadProfile;
 
 /// Complete simulation result — matches the Python dict from hardware_sim.py lines 76-93.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
