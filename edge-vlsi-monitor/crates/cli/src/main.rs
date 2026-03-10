@@ -186,26 +186,56 @@ fn cmd_sim(
     threads: usize,
     height: usize,
     width: usize,
+    model: Option<String>,
+    seq_length: usize,
     json: bool,
 ) -> Result<()> {
-    let test_data = generate_test_samples(samples, height, width);
-    let mut config = PipelineConfig::default();
-    config.dvfs.frequency_mhz = clock_mhz;
+    let mut dvfs = DvfsConfig::default();
+    dvfs.frequency_mhz = clock_mhz;
 
-    let result = if threads == 0 || threads == 1 {
-        println!("Running sequential simulation ({} samples, {}x{}, {} MHz)...",
-            samples, height, width, clock_mhz);
-        run_simulation(&test_data, &config)
-    } else {
-        println!("Running parallel simulation ({} samples, {} threads, {} MHz)...",
-            samples, threads, clock_mhz);
-        run_simulation_parallel(&test_data, &config, Some(threads))
-    };
+    if let Some(model_name) = model {
+        let registry = ModelRegistry::new();
+        let profile = registry
+            .workload_profile(&model_name, Some(seq_length), samples as u64)
+            .ok_or_else(|| anyhow::anyhow!(
+                "Unknown model '{}'. Run 'models' to see available models.", model_name
+            ))?;
 
-    if json {
-        println!("{}", serde_json::to_string_pretty(&result)?);
+        println!("Running {} simulation ({} inferences, seq_length={}, {:.0} MHz)...",
+            profile.model_name, samples, seq_length, clock_mhz);
+        println!("  MACs per inference: {:.2}M", profile.mac_ops as f64 / 1e6);
+        println!("  Activations per inference: {:.2}M", profile.activation_ops as f64 / 1e6);
+
+        let thermal_config = ThermalConfig::default();
+        let result = run_simulation_from_profile(&profile, &dvfs, &thermal_config);
+
+        if json {
+            println!("{}", serde_json::to_string_pretty(&result)?);
+        } else {
+            print_simulation_result(&result, samples);
+        }
     } else {
-        print_simulation_result(&result, samples);
+        let test_data = generate_test_samples(samples, height, width);
+        let config = PipelineConfig {
+            dvfs,
+            ..PipelineConfig::default()
+        };
+
+        let result = if threads == 0 || threads == 1 {
+            println!("Running sequential simulation ({} samples, {}x{}, {} MHz)...",
+                samples, height, width, clock_mhz);
+            run_simulation(&test_data, &config)
+        } else {
+            println!("Running parallel simulation ({} samples, {} threads, {} MHz)...",
+                samples, threads, clock_mhz);
+            run_simulation_parallel(&test_data, &config, Some(threads))
+        };
+
+        if json {
+            println!("{}", serde_json::to_string_pretty(&result)?);
+        } else {
+            print_simulation_result(&result, samples);
+        }
     }
 
     Ok(())
