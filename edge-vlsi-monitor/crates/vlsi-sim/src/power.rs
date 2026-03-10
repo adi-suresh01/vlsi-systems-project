@@ -142,6 +142,18 @@ impl PowerModel {
         power.total_power_w * total_time_secs / num_samples as f64
     }
 
+    pub fn estimate_from_profile(&self, profile: &crate::workload::WorkloadProfile) -> PowerBreakdown {
+        self.estimate(profile.total_mac_ops(), profile.total_activation_ops())
+    }
+
+    pub fn estimate_from_profile_with_thermal(
+        &self,
+        profile: &crate::workload::WorkloadProfile,
+        temp_c: f64,
+    ) -> PowerBreakdown {
+        self.estimate_with_thermal(profile.total_mac_ops(), profile.total_activation_ops(), temp_c)
+    }
+
     pub fn frequency_mhz(&self) -> f64 {
         self.config.frequency_mhz
     }
