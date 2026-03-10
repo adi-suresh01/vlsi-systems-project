@@ -99,6 +99,32 @@ enum Commands {
         #[arg(short, long, default_value = "5")]
         samples: usize,
     },
+
+    /// Sweep sequence lengths for transformer attention power analysis
+    AttentionSweep {
+        /// Transformer model: tinybert, distilgpt2, bert-base
+        #[arg(long, default_value = "distilgpt2")]
+        model: String,
+
+        /// Comma-separated sequence lengths to sweep
+        #[arg(long, value_delimiter = ',', default_value = "128,256,512,1024,2048")]
+        seq_lengths: Vec<usize>,
+
+        /// Number of inferences per data point
+        #[arg(long, default_value = "1")]
+        inferences: u64,
+
+        /// DVFS level: 0=ultra-low, 1=low, 2=balanced, 3=performance, 4=turbo
+        #[arg(long)]
+        dvfs_level: Option<usize>,
+
+        /// Output as CSV
+        #[arg(long)]
+        csv: bool,
+    },
+
+    /// List available models in the registry
+    Models,
 }
 
 #[tokio::main]
