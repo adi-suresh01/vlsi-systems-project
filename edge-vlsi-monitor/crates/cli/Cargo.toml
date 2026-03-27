@@ -25,3 +25,4 @@ dashboard = { path = "../dashboard" }
 clap = { version = "4", features = ["derive"] }
 sysinfo = "0.33"
 comfy-table = "7.1"
+num_cpus = "1.16"

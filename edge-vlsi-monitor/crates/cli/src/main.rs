@@ -125,6 +125,30 @@ enum Commands {
 
     /// List available models in the registry
     Models,
+
+    /// Run sustained CPU stress for thermal experiments.
+    /// Loops the simulation continuously for a fixed duration.
+    Stress {
+        /// Duration in seconds
+        #[arg(short, long, default_value = "300")]
+        duration: u64,
+
+        /// Samples per batch (larger = more work per iteration)
+        #[arg(short, long, default_value = "500")]
+        samples: usize,
+
+        /// Number of parallel threads (0 = all cores)
+        #[arg(short = 'j', long, default_value = "0")]
+        threads: usize,
+
+        /// Sample height
+        #[arg(long, default_value = "28")]
+        height: usize,
+
+        /// Sample width
+        #[arg(long, default_value = "28")]
+        width: usize,
+    },
 }
 
 #[tokio::main]
@@ -177,6 +201,14 @@ async fn main() -> Result<()> {
         } => cmd_attention_sweep(&model, &seq_lengths, inferences, dvfs_level, csv, cli.json),
 
         Commands::Models => cmd_models(cli.json),
+
+        Commands::Stress {
+            duration,
+            samples,
+            threads,
+            height,
+            width,
+        } => cmd_stress(duration, samples, threads, height, width),
     }
 }
 
@@ -577,6 +609,65 @@ fn cmd_models(json: bool) -> Result<()> {
         }
         println!("{table}");
     }
+
+    Ok(())
+}
+
+fn cmd_stress(
+    duration_secs: u64,
+    samples: usize,
+    threads: usize,
+    height: usize,
+    width: usize,
+) -> Result<()> {
+    use std::time::{Duration, Instant};
+
+    let config = PipelineConfig::default();
+    let deadline = Instant::now() + Duration::from_secs(duration_secs);
+    let effective_threads = if threads == 0 {
+        num_cpus::get()
+    } else {
+        threads
+    };
+
+    eprintln!(
+        "Stress test: {} threads, {} samples/batch, {}x{}, {} seconds",
+        effective_threads, samples, height, width, duration_secs
+    );
+
+    let mut iteration = 0u64;
+    let mut total_samples = 0u64;
+    let start = Instant::now();
+    let mut last_report = Instant::now();
+
+    while Instant::now() < deadline {
+        let test_data = generate_test_samples(samples, height, width);
+        if effective_threads <= 1 {
+            run_simulation(&test_data, &config);
+        } else {
+            run_simulation_parallel(&test_data, &config, Some(effective_threads));
+        }
+        iteration += 1;
+        total_samples += samples as u64;
+
+        if last_report.elapsed() >= Duration::from_secs(10) {
+            let elapsed = start.elapsed().as_secs();
+            eprintln!(
+                "  [{}/{}s] {} iterations, {} total samples",
+                elapsed, duration_secs, iteration, total_samples
+            );
+            last_report = Instant::now();
+        }
+    }
+
+    let elapsed = start.elapsed().as_secs_f64();
+    eprintln!(
+        "Done: {} iterations, {} samples in {:.1}s ({:.0} samples/s)",
+        iteration,
+        total_samples,
+        elapsed,
+        total_samples as f64 / elapsed
+    );
 
     Ok(())
 }
