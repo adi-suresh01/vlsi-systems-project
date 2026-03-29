@@ -126,6 +126,21 @@ enum Commands {
     /// List available models in the registry
     Models,
 
+    /// Run real ONNX model inference in a loop for power/thermal experiments.
+    Infer {
+        /// Path to ONNX model file
+        #[arg(short, long)]
+        model_path: PathBuf,
+
+        /// Duration in seconds
+        #[arg(short, long, default_value = "300")]
+        duration: u64,
+
+        /// Batch size per inference
+        #[arg(short, long, default_value = "1")]
+        batch_size: usize,
+    },
+
     /// Run sustained CPU stress for thermal experiments.
     /// Loops the simulation continuously for a fixed duration.
     Stress {
@@ -201,6 +216,12 @@ async fn main() -> Result<()> {
         } => cmd_attention_sweep(&model, &seq_lengths, inferences, dvfs_level, csv, cli.json),
 
         Commands::Models => cmd_models(cli.json),
+
+        Commands::Infer {
+            model_path,
+            duration,
+            batch_size,
+        } => cmd_infer(model_path, duration, batch_size),
 
         Commands::Stress {
             duration,
@@ -609,6 +630,64 @@ fn cmd_models(json: bool) -> Result<()> {
         }
         println!("{table}");
     }
+
+    Ok(())
+}
+
+fn cmd_infer(model_path: PathBuf, duration_secs: u64, batch_size: usize) -> Result<()> {
+    use std::time::{Duration, Instant};
+    use agent_runtime::OnnxModel;
+
+    eprintln!("Loading ONNX model from {}...", model_path.display());
+    let model = OnnxModel::load(&model_path)?;
+    let input_shape = model.input_shape().to_vec();
+    let input_elements: usize = input_shape.iter().product::<usize>() / input_shape[0].max(1) * batch_size;
+
+    eprintln!(
+        "Model loaded. Input shape: {:?}, batch_size: {}, duration: {}s",
+        input_shape, batch_size, duration_secs
+    );
+
+    // Generate random input data (reused across iterations to avoid allocation overhead)
+    let input_data: Vec<f32> = (0..input_elements)
+        .map(|i| ((i as f32 * 0.001).sin() + 1.0) / 2.0)
+        .collect();
+
+    let deadline = Instant::now() + Duration::from_secs(duration_secs);
+    let start = Instant::now();
+    let mut iteration = 0u64;
+    let mut total_latency_us = 0u64;
+    let mut last_report = Instant::now();
+
+    while Instant::now() < deadline {
+        let result = model.run(&input_data, batch_size)?;
+        iteration += 1;
+        total_latency_us += result.latency_us;
+
+        if last_report.elapsed() >= Duration::from_secs(10) {
+            let elapsed = start.elapsed().as_secs();
+            let avg_latency_ms = total_latency_us as f64 / iteration as f64 / 1000.0;
+            eprintln!(
+                "  [{}/{}s] {} inferences, avg latency: {:.1}ms, throughput: {:.1} inf/s",
+                elapsed,
+                duration_secs,
+                iteration,
+                avg_latency_ms,
+                iteration as f64 / start.elapsed().as_secs_f64()
+            );
+            last_report = Instant::now();
+        }
+    }
+
+    let elapsed = start.elapsed().as_secs_f64();
+    let avg_latency_ms = total_latency_us as f64 / iteration as f64 / 1000.0;
+    eprintln!(
+        "Done: {} inferences in {:.1}s ({:.1} inf/s, avg latency: {:.1}ms)",
+        iteration,
+        elapsed,
+        iteration as f64 / elapsed,
+        avg_latency_ms
+    );
 
     Ok(())
 }
