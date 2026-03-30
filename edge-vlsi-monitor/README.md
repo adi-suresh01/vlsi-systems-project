@@ -1,14 +1,14 @@
 # Edge VLSI AI Monitor
 
-A Rust framework for simulating and profiling the power consumption, thermal behavior, and computational overhead of concurrent AI inference agents on edge hardware.
+A Rust framework for simulating and profiling power consumption, thermal behavior, and computational overhead of AI inference on edge hardware. Validated against real measurements on a Raspberry Pi 5 with INA219 power sensing.
 
 ## Motivation
 
-Most edge AI benchmarking stops at latency and throughput. That tells you how fast your model runs. It does not tell you whether your device can sustain that workload for more than a few minutes before thermal throttling cuts your throughput in half, or whether adding a second agent will push your junction temperature past the point where leakage power dominates your entire power budget.
+Most edge AI benchmarking stops at latency and throughput on a cool device. That tells you nothing about what happens after five minutes of sustained inference, when thermal throttling cuts your clock from 2.4 GHz to 1.5 GHz and your throughput drops with it.
 
-This project exists because there is a gap between how edge AI systems are evaluated and how they actually behave in deployment. The gap gets wider as the industry moves from single-model inference toward multi-agent orchestration, where several agents share a die, consume context, and compete for the same thermal envelope.
+This framework models that behavior explicitly: power dissipation, junction temperature rise, DVFS throttling, and the thermal ceiling that all workloads converge to. It includes both analytical simulation (RC thermal model, DVFS sweeps, attention scaling projections) and support for running real ONNX model inference via the tract runtime.
 
-The specific question this framework helps answer: given N agents running inference on shared edge hardware, what is the steady-state power draw, the thermal trajectory, and the point at which DVFS throttling degrades throughput?
+The RC thermal model has been calibrated against hardware measurements on a Raspberry Pi 5 (R_th = 10.67 C/W, C_th = 4.08 J/C), achieving 1.3C mean absolute error during sustained workloads.
 
 ## Related Work
 
@@ -127,11 +127,14 @@ All commands support `--json` for machine-readable output.
 ```
 edge-vlsi [--json] [-v] <command>
 
-sim       --samples N  --clock-mhz F  -j THREADS  --height H  --width W
-bench     --samples N  --compare
-dvfs      --samples N
+sim              --samples N  --clock-mhz F  -j THREADS  --model MODEL
+bench            --samples N  --compare
+dvfs             --samples N
+attention-sweep  --model MODEL  --seq-lengths 64,128,256,512  [--csv|--json]
+models                          # List available model profiles
+infer            --model-path FILE.onnx  --duration SECS  --batch-size N
 sysinfo
-dashboard --host ADDR  --port PORT  --frontend-dir PATH  --metrics-interval MS
+dashboard        --host ADDR  --port PORT  --frontend-dir PATH
 ```
 
 Example output from `dvfs`:
@@ -185,19 +188,15 @@ cargo run -- --json sim --samples 50 --height 56 --width 56
 
 **Deployment sizing.** For a given power budget, divide by per-agent power at your target DVFS level to get the maximum agent count. Then verify with the thermal model that the combined workload stays below the throttle threshold.
 
-## Prior Version
-
-This is a rewrite of a Python/C++/SystemVerilog system in the same repository (`vlsi-ai-integration/`). The original used TensorFlow for model training, a Python hardware simulator with per-operation sleep delays, a C++ accelerator with manual mutex locking, and a FastAPI dashboard with HTTP polling. The Rust version replaces all of that with a single 20 MB binary, compile-time concurrency safety, physics-based power and thermal models that the original lacked, and WebSocket streaming for the dashboard.
-
 ## Tests
 
-49 tests across all crates. Run with `cargo test --workspace`.
+69 tests across all crates. Run with `cargo test --workspace`.
 
 | Crate | Unit | Integration | Covers |
 |-------|------|-------------|--------|
-| vlsi-sim | 25 | 5 | MAC, ReLU, convolution, pipeline, power, thermal, DVFS |
+| vlsi-sim | 30 | 5 | MAC, ReLU, convolution, pipeline, power, thermal, DVFS, workload profiles, attention |
 | metrics-collector | 11 | 0 | Ring buffer, histogram, power tracker |
-| agent-runtime | 7 | 3 | State machine, agent lifecycle, metrics |
+| agent-runtime | 12 | 3 | State machine, agent lifecycle, metrics, model registry |
 | dashboard | 0 | 3 | Serialization, WebSocket messages |
 
 ## Project Structure
@@ -216,11 +215,12 @@ edge-vlsi-monitor/
         testbenches/
     crates/
         vlsi-sim/src/
-            mac.rs, relu.rs, conv.rs, pipeline.rs, power.rs, thermal.rs
+            mac.rs, relu.rs, conv.rs, pipeline.rs, power.rs, thermal.rs,
+            workload.rs, attention.rs
         metrics-collector/src/
             ring_buffer.rs, histogram.rs, power_tracker.rs
         agent-runtime/src/
-            state.rs, agent.rs, scheduler.rs, inference.rs
+            state.rs, agent.rs, scheduler.rs, inference.rs, model_registry.rs
         dashboard/src/
             rest.rs, ws.rs, state.rs
         cli/src/

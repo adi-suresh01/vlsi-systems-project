@@ -1,18 +1,19 @@
 # VLSI Systems Project
 
-Power consumption and thermal simulation for concurrent AI inference agents on edge hardware, built in Rust.
+Power-thermal characterization of sustained AI inference on edge hardware. Combines a Rust simulation framework with real hardware measurements on a Raspberry Pi 5 instrumented with an INA219 current sensor.
 
 ## What This Is
 
-This project simulates what happens when you run multiple AI agents on a shared edge device. It models the power draw, junction temperature, and DVFS throttling behavior that real deployments face but most benchmarks ignore.
+This project characterizes what happens when you run sustained neural network inference on a thermally constrained edge device. It includes both a simulation framework (power modeling, RC thermal model, DVFS sweeps, attention scaling analysis) and real hardware experiments measuring temperature, power, and throttling behavior over time.
 
-The core framework lives in `edge-vlsi-monitor/`. It is a Cargo workspace with five crates covering hardware simulation, metrics collection, agent lifecycle management, a web dashboard, and a CLI.
+The core finding: all workloads converge to the same 83 to 85C thermal ceiling regardless of model complexity. A synthetic convolution loop, MobileNetV2 (3.8 inf/s), and SqueezeNet (25.2 inf/s) all draw 5.28 to 5.83W and hit the same steady-state temperature. The thermal envelope is a property of the device, not the workload.
 
-## Why It Exists
+## Hardware Platform
 
-Edge AI benchmarking typically reports latency and throughput for a single model on a cool device. That tells you almost nothing about sustained multi-agent workloads, where thermal coupling between co-located agents causes DVFS throttling that degrades throughput for everyone.
-
-This project models that behavior explicitly. Given N agents sharing a die, it computes steady-state power, thermal trajectory, and the point where throttling kicks in.
+- Raspberry Pi 5 Model B (BCM2712, 4x Cortex-A76, 2.4 GHz stock)
+- INA219 I2C current/voltage sensor for system-level power measurement
+- No heatsink or fan (intentional, measuring bare thermal behavior)
+- RC thermal model calibrated against real data: R_th = 10.67 C/W, C_th = 4.08 J/C, 1.3C MAE
 
 ## Project Layout
 
@@ -20,13 +21,14 @@ This project models that behavior explicitly. Given N agents sharing a die, it c
 edge-vlsi-monitor/
     Cargo.toml                  Workspace root
     crates/
-        vlsi-sim/               Simulation engine (MAC, ReLU, convolution, power, thermal)
-        metrics-collector/      Lock-free ring buffers, HDR histograms, power tracking
-        agent-runtime/          Agent state machine, ONNX inference, async scheduler
+        vlsi-sim/               Simulation engine (MAC, ReLU, convolution, power, thermal, attention)
+        metrics-collector/      Ring buffers, HDR histograms, power tracking
+        agent-runtime/          Agent state machine, ONNX inference (tract), model registry
         dashboard/              Axum REST API, WebSocket streaming, static frontend
         cli/                    Command-line interface
     frontend/                   Web dashboard (HTML/CSS/JS, Chart.js)
     rtl/                        SystemVerilog reference modules (MAC, ReLU, pipeline)
+plots/                          Experiment analysis and figure generation scripts (Python)
 ```
 
 ## Quick Start
@@ -34,27 +36,33 @@ edge-vlsi-monitor/
 ```bash
 cd edge-vlsi-monitor
 cargo build --release
-cargo test --workspace
+cargo test --workspace          # 69 tests
 ```
 
 ```bash
-cargo run -- sim --samples 10          # Run a hardware simulation
-cargo run -- bench --samples 20 --compare  # Sequential vs parallel comparison
-cargo run -- dvfs --samples 5          # Sweep all DVFS levels
-cargo run -- sysinfo                   # Print host hardware info
-cargo run -- dashboard                 # Start the web dashboard on port 8080
+cargo run -- sim --samples 10                    # Run a hardware simulation
+cargo run -- sim --model mobilenetv2 --samples 5 # Simulate a specific model profile
+cargo run -- bench --samples 20 --compare        # Sequential vs parallel comparison
+cargo run -- dvfs --samples 5                    # Sweep all DVFS levels
+cargo run -- attention-sweep --model tinybert --seq-lengths 64,128,256,512
+cargo run -- models                              # List available model profiles
+cargo run -- infer --model-path model.onnx --duration 300  # Run real ONNX inference
+cargo run -- sysinfo                             # Print host hardware info
+cargo run -- dashboard                           # Start the web dashboard on port 8080
 ```
 
 All commands support `--json` for machine-readable output.
 
+## Key Results
+
+- **RC model validation**: First-order RC thermal model calibrated to 1.3C MAE against INA219 measurements. Default thermal capacitance was 8x too small (0.5 vs 4.08 J/C); thermal resistance was close (10.0 vs 10.67 C/W).
+- **Workload-independent thermal ceiling**: Synthetic convolution, MobileNetV2, and SqueezeNet all converge to 83-85C at 5.28-5.83W. Model compression improves throughput but does not reduce thermal burden.
+- **Multi-core thermal amplification**: Parallel (4-core) workloads reach the throttle threshold 2.2x faster than sequential (1-core), but both saturate at the same ceiling.
+- **Attention scaling barriers**: Transformer attention's O(n^2) scaling creates hard thermal limits. BERT-base exceeds 85C at sequence length 64.
+
 ## Documentation
 
-See [edge-vlsi-monitor/README.md](edge-vlsi-monitor/README.md) for the full technical writeup, including the power model equations, thermal model, DVFS operating points, agent lifecycle, experiment guide, and API reference.
-
-## Prior Version
-
-This repository previously contained a Python/C++/SystemVerilog implementation (`vlsi-ai-integration/`). The Rust rewrite replaces all of that with a single binary, compile-time concurrency safety, physics-based power and thermal models, and a WebSocket-based dashboard. The SystemVerilog RTL modules are retained as reference designs in `edge-vlsi-monitor/rtl/`.
-
+See [edge-vlsi-monitor/README.md](edge-vlsi-monitor/README.md) for the full technical writeup, including the power model equations, thermal model, DVFS operating points, agent lifecycle, and API reference.
 ## License
 
 MIT
