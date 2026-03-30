@@ -110,7 +110,7 @@ if par_throttle_time is not None:
 ax1.set_xlabel("Time Since Stress Start (seconds)", fontsize=11)
 ax1.set_ylabel("Temperature (C)", fontsize=11)
 ax1.set_title("Sequential vs Parallel Thermal Trajectory\n"
-              "(Raspberry Pi 4B, 2.4 GHz OC, no heatsink, 500 samples/batch)",
+              "(Raspberry Pi 5, 2.4 GHz, no heatsink, 500 samples/batch)",
               fontsize=12, fontweight="bold")
 ax1.legend(loc="lower right", fontsize=9, framealpha=0.9)
 ax1.grid(True, alpha=0.3)

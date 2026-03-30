@@ -3,7 +3,7 @@
 Figure 1: Thermal Trajectory Under Sustained Load (Experiment 1)
 
 Plots temperature, CPU frequency, and throttle state over time for
-a Raspberry Pi 4B (overclocked to 2.4 GHz) running sustained
+a Raspberry Pi 5 (2.4 GHz stock) running sustained
 convolution workloads across all 4 Cortex-A72 cores.
 """
 
@@ -145,8 +145,8 @@ ax1.set_ylabel("Temperature (C)", fontsize=12)
 ax1.set_ylim(40, peak_temp + 8)
 ax1.legend(loc="lower right", fontsize=9, framealpha=0.9)
 ax1.grid(True, alpha=0.3)
-ax1.set_title("Raspberry Pi 4B Thermal Trajectory Under Sustained Inference Load\n"
-              "(4x Cortex-A72 @ 2.4 GHz OC, no heatsink, 500 samples/batch x 4 threads)",
+ax1.set_title("Raspberry Pi 5 Thermal Trajectory Under Sustained Inference Load\n"
+              "(4x Cortex-A76 @ 2.4 GHz, no heatsink, 500 samples/batch x 4 threads)",
               fontsize=12, fontweight="bold", pad=12)
 
 # Bottom panel: CPU Frequency

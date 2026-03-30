@@ -3,7 +3,7 @@
 Figure 6: Predicted vs Measured Power and Thermal Validation (Experiment 6)
 
 Compares the simulation framework's RC thermal model against real measurements
-from a Raspberry Pi 4B with INA219 power sensor. Fits R_th and C_th to the
+from a Raspberry Pi 5 with INA219 power sensor. Fits R_th and C_th to the
 measured data and reports calibration parameters and error metrics.
 """
 
@@ -176,7 +176,7 @@ ax_temp.text(0.98, 0.35, textstr, transform=ax_temp.transAxes, fontsize=8,
 
 ax_temp.set_ylabel("Temperature (C)", fontsize=11)
 ax_temp.set_title("Predicted vs Measured Thermal Trajectory\n"
-                  "(Raspberry Pi 4B, 2.4 GHz OC, no heatsink, INA219 power sensor)",
+                  "(Raspberry Pi 5, 2.4 GHz, no heatsink, INA219 power sensor)",
                   fontsize=12, fontweight="bold")
 ax_temp.legend(loc="upper left", fontsize=8, framealpha=0.9)
 ax_temp.grid(True, alpha=0.3)
