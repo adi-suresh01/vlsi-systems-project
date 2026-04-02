@@ -225,7 +225,8 @@ async fn main() -> Result<()> {
             model_path,
             duration,
             batch_size,
-        } => cmd_infer(model_path, duration, batch_size),
+            latency_log,
+        } => cmd_infer(model_path, duration, batch_size, latency_log),
 
         Commands::Stress {
             duration,
