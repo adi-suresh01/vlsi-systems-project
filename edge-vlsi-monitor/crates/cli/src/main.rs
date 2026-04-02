@@ -139,6 +139,10 @@ enum Commands {
         /// Batch size per inference
         #[arg(short, long, default_value = "1")]
         batch_size: usize,
+
+        /// Path to write per-inference latency CSV (timestamp_epoch_ms,inference_num,latency_ms)
+        #[arg(short, long)]
+        latency_log: Option<PathBuf>,
     },
 
     /// Run sustained CPU stress for thermal experiments.
