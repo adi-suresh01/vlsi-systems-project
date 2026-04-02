@@ -639,8 +639,9 @@ fn cmd_models(json: bool) -> Result<()> {
     Ok(())
 }
 
-fn cmd_infer(model_path: PathBuf, duration_secs: u64, batch_size: usize) -> Result<()> {
-    use std::time::{Duration, Instant};
+fn cmd_infer(model_path: PathBuf, duration_secs: u64, batch_size: usize, latency_log: Option<PathBuf>) -> Result<()> {
+    use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+    use std::io::Write;
     use agent_runtime::OnnxModel;
 
     eprintln!("Loading ONNX model from {}...", model_path.display());
@@ -652,6 +653,16 @@ fn cmd_infer(model_path: PathBuf, duration_secs: u64, batch_size: usize) -> Resu
         "Model loaded. Input shape: {:?}, batch_size: {}, duration: {}s",
         input_shape, batch_size, duration_secs
     );
+
+    // Set up latency log file if requested
+    let mut log_writer = if let Some(ref log_path) = latency_log {
+        let mut f = std::fs::File::create(log_path)?;
+        writeln!(f, "timestamp_epoch_ms,inference_num,latency_ms")?;
+        eprintln!("Logging per-inference latency to {}", log_path.display());
+        Some(f)
+    } else {
+        None
+    };
 
     // Generate random input data (reused across iterations to avoid allocation overhead)
     let input_data: Vec<f32> = (0..input_elements)
@@ -669,6 +680,16 @@ fn cmd_infer(model_path: PathBuf, duration_secs: u64, batch_size: usize) -> Resu
         iteration += 1;
         total_latency_us += result.latency_us;
 
+        // Write per-inference latency to CSV
+        if let Some(ref mut writer) = log_writer {
+            let epoch_ms = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis();
+            let latency_ms = result.latency_us as f64 / 1000.0;
+            writeln!(writer, "{},{},{:.3}", epoch_ms, iteration, latency_ms)?;
+        }
+
         if last_report.elapsed() >= Duration::from_secs(10) {
             let elapsed = start.elapsed().as_secs();
             let avg_latency_ms = total_latency_us as f64 / iteration as f64 / 1000.0;
@@ -682,6 +703,11 @@ fn cmd_infer(model_path: PathBuf, duration_secs: u64, batch_size: usize) -> Resu
             );
             last_report = Instant::now();
         }
+    }
+
+    // Flush the log
+    if let Some(ref mut writer) = log_writer {
+        writer.flush()?;
     }
 
     let elapsed = start.elapsed().as_secs_f64();
